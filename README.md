@@ -3,6 +3,9 @@
 AI-powered smart study assistant that transforms documents into flashcards, quizzes, summaries, analytics, contextual AI chat, and interactive annotations.
 
 ---
+##Demo Video Link
+https://drive.google.com/drive/folders/1IjAOpEf44leN7mAiYfHOyD-Jay1y_Im6?usp=drive_link
+---
 ## Problem Statement
 
 Students often work with large PDFs, lecture notes, and other study materials that are difficult to organize and revise efficiently. Creating flashcards and practice questions manually is time-consuming, while traditional study methods provide limited insights into learning progress and areas that need improvement.
@@ -10,6 +13,7 @@ Students often work with large PDFs, lecture notes, and other study materials th
 Students also lack a centralized platform where they can manage study materials, practice concepts, interact with AI for clarification, and monitor their performance.
 
 MemoraX addresses these challenges by converting static study materials into structured, interactive, and personalized learning experiences.
+---
 
 ## Overview
 
