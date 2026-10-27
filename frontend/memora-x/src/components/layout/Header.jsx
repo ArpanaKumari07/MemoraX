@@ -1,0 +1,38 @@
+import React from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { Menu } from 'lucide-react';
+import UserDropdown from '../common/UserDropdown';
+import NotificationDropdown from '../common/NotificationDropdown';
+
+const Header = ({ toggleSidebar }) => {
+  const { user, logout } = useAuth();
+
+  return (
+    <header className="sticky top-0 z-40 w-full h-16 bg-neutral-950/90 backdrop-blur-xl border-b border-neutral-800/80">
+      <div className="flex items-center justify-between h-full px-4 md:px-6">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-xl transition-all duration-200"
+          aria-label="Toggle sidebar"
+        >
+          <Menu size={24} />
+        </button>
+
+        <div className="hidden md:block"></div>
+
+        <div className="flex items-center gap-3">
+          {/* Notifications */}
+          <NotificationDropdown />
+
+          {/* User Profile Dropdown */}
+          <div className="pl-3 border-l border-neutral-800/60">
+            <UserDropdown user={user} onLogout={logout} />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

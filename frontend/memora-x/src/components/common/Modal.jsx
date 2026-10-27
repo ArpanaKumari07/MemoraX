@@ -1,0 +1,174 @@
+import React, { useRef } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { Download, X } from "lucide-react";
+import BaseModal from "./BaseModal";
+
+const Modal = ({ isOpen, onClose, title, children }) => {
+  const printAreaRef = useRef(null);
+  const scrollRef = useRef(null);
+
+  const handleExtractPDF = async () => {
+    const element = printAreaRef.current;
+    const scrollEl = scrollRef.current;
+    if (!element) return;
+
+    // Temporarily expand scrollable area for full content capture
+    if (scrollEl) {
+      scrollEl.style.maxHeight = "none";
+      scrollEl.style.overflow = "visible";
+    }
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+    });
+
+    // Restore scroll constraints
+    if (scrollEl) {
+      scrollEl.style.maxHeight = "";
+      scrollEl.style.overflow = "";
+    }
+
+    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    // Reserve space at the bottom of each page for the footer
+    const footerHeight = 30;
+    const contentHeight = pageHeight - footerHeight;
+    const ratio = pageWidth / canvas.width;
+    const scaledTotalHeight = canvas.height * ratio;
+    const totalPages = Math.ceil(scaledTotalHeight / contentHeight);
+
+    const generatedDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    let yOffset = 0;
+    let pageNum = 1;
+
+    while (yOffset < scaledTotalHeight) {
+      if (yOffset > 0) pdf.addPage();
+
+      const srcY = yOffset / ratio;
+      const srcH = Math.min(contentHeight / ratio, canvas.height - srcY);
+
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = srcH;
+      pageCanvas
+        .getContext("2d")
+        .drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+
+      pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", 0, 0, pageWidth, srcH * ratio);
+
+      // Footer separator line
+      pdf.setDrawColor(210, 210, 220);
+      pdf.line(24, pageHeight - footerHeight + 4, pageWidth - 24, pageHeight - footerHeight + 4);
+
+      // Footer text: left = branding, center = date, right = page number
+      pdf.setFontSize(8);
+      pdf.setTextColor(160, 160, 175);
+      pdf.text("MemoraX", 24, pageHeight - 12);
+      pdf.text(generatedDate, pageWidth / 2, pageHeight - 12, { align: "center" });
+      pdf.text(`Page ${pageNum} of ${totalPages}`, pageWidth - 24, pageHeight - 12, { align: "right" });
+
+      yOffset += contentHeight;
+      pageNum++;
+    }
+
+    const fileName = title
+      ? `${title.replace(/\s+/g, "_").toLowerCase()}.pdf`
+      : "document.pdf";
+
+    pdf.save(fileName);
+  };
+
+  if (!isOpen) return null;
+
+  const generatedDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  return (
+    <BaseModal isOpen={isOpen} onClose={onClose} maxWidth="2xl" className="p-6">
+      {/* MODAL UI HEADER — close button lives here, NOT captured in PDF */}
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all duration-200"
+          >
+            <X size={18} strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* SCROLL WRAPPER */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto pr-2">
+
+          {/* PRINT AREA — clean document layout, captured for PDF */}
+          <div ref={printAreaRef} className="bg-neutral-950 px-8 py-5 rounded-xl border border-neutral-800">
+
+            {/* PDF DOCUMENT HEADER — replaces modal chrome in the exported file */}
+            <div className="mb-6 pb-4 border-b border-neutral-800">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500 mb-1">
+                MemoraX
+              </p>
+              <h1 className="text-2xl font-bold text-white leading-tight">{title}</h1>
+              <p className="text-xs text-neutral-500 mt-1.5">Generated on {generatedDate}</p>
+            </div>
+
+            {/* DOCUMENT CONTENT — typography overrides for clean PDF rendering */}
+            <div
+              className="
+                text-neutral-300
+                [&_p]:mb-3 [&_p]:leading-7
+                [&_h1]:text-xl [&_h1]:font-bold [&_h1]:text-white [&_h1]:mt-6 [&_h1]:mb-3
+                [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-neutral-100 [&_h2]:mt-5 [&_h2]:mb-2
+                [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-neutral-100 [&_h3]:mt-4 [&_h3]:mb-2
+                [&_ul]:mb-3 [&_ul]:ml-5 [&_ul]:list-disc
+                [&_ol]:mb-3 [&_ol]:ml-5 [&_ol]:list-decimal
+                [&_li]:mb-1.5 [&_li]:leading-6
+                [&_blockquote]:border-l-4 [&_blockquote]:border-neutral-700 [&_blockquote]:pl-4
+                [&_blockquote]:italic [&_blockquote]:text-neutral-500 [&_blockquote]:my-4
+                [&_strong]:font-semibold [&_strong]:text-white
+                [&_hr]:my-6 [&_hr]:border-neutral-800
+              "
+            >
+              {children}
+            </div>
+
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-neutral-800 shrink-0">
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 text-sm text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-all duration-200"
+          >
+            Close
+          </button>
+          <button
+            onClick={handleExtractPDF}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-xl transition-all duration-200 shadow-[0_2px_12px_rgba(61,94,229,0.25)]"
+          >
+            <Download className="w-4 h-4" />
+            Extract as PDF
+          </button>
+        </div>
+
+    </BaseModal>
+  );
+};
+
+export default Modal;
