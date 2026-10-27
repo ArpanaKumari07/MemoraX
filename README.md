@@ -320,6 +320,13 @@ npm run dev
 
 ---
 
+## Deployment
+
+https://memora-x-8xq4.vercel.app/
+
+---
+
 ## 📄 License
 
 This project is for educational and development purposes.
+
