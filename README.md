@@ -5,7 +5,7 @@ AI-powered smart study assistant that transforms documents into flashcards, quiz
 ---
 ##Demo Video Link
 
-- https://drive.google.com/drive/folders/1IjAOpEf44leN7mAiYfHOyD-Jay1y_Im6?usp=drive_link
+https://drive.google.com/drive/folders/1IjAOpEf44leN7mAiYfHOyD-Jay1y_Im6?usp=drive_link
 
 ---
 ## Problem Statement
